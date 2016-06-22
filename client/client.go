@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -150,11 +151,23 @@ func NewTarget(targetName string, targetPath string) (*Target, error) {
 	return &Target{Name: targetName, Hashes: meta.Hashes, Length: meta.Length}, nil
 }
 
-func rootCertKey(gun string, privKey data.PrivateKey) (data.PublicKey, error) {
+func rootCertKey(gun string, privKey data.PrivateKey, rootCAPath string) (data.PublicKey, error) {
 	// Hard-coded policy: the generated certificate expires in 10 years.
 	startTime := time.Now()
-	cert, err := cryptoservice.GenerateCertificate(
-		privKey, gun, startTime, startTime.Add(notary.Year*10))
+
+	// Load the user-specified root CA, if any
+	var rootCA *x509.Certificate
+	var err error
+	if rootCAPath != "" {
+	   rootCA, err = trustmanager.LoadCertFromFile(rootCAPath)
+	   if err != nil {
+		return nil, fmt.Errorf("failed to load user-specified root CA at: %s (%v)", rootCAPath, err)
+	   }
+	} else {
+	     rootCA = (*x509.Certificate)(nil)
+	}
+	cert, err := cryptoservice.GenerateSignedCertificate(
+		privKey, gun, startTime, startTime.Add(notary.Year*10), rootCA)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +186,7 @@ func rootCertKey(gun string, privKey data.PrivateKey) (data.PublicKey, error) {
 // timestamp key and possibly other serverManagedRoles), but the created repository
 // result is only stored on local disk, not published to the server. To do that,
 // use r.Publish() eventually.
-func (r *NotaryRepository) Initialize(rootKeyID string, serverManagedRoles ...string) error {
+func (r *NotaryRepository) Initialize(rootKeyID string, rootCAPath string, serverManagedRoles ...string) error {
 	privKey, _, err := r.CryptoService.GetPrivateKey(rootKeyID)
 	if err != nil {
 		return err
@@ -206,7 +219,7 @@ func (r *NotaryRepository) Initialize(rootKeyID string, serverManagedRoles ...st
 		}
 	}
 
-	rootKey, err := rootCertKey(r.gun, privKey)
+	rootKey, err := rootCertKey(r.gun, privKey, rootCAPath)
 	if err != nil {
 		return err
 	}
@@ -917,7 +930,9 @@ func (r *NotaryRepository) RotateKey(role string, serverManagesKey bool) error {
 		if err != nil {
 			return err
 		}
-		pubKey, err = rootCertKey(r.gun, privKey)
+
+		// Should RotateKey support specification of a root CA?
+		pubKey, err = rootCertKey(r.gun, privKey, "")
 		if err != nil {
 			return err
 		}
