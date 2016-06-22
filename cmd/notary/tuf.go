@@ -51,7 +51,7 @@ var cmdTUFRemoveTemplate = usageTemplate{
 }
 
 var cmdTUFInitTemplate = usageTemplate{
-	Use:   "init [ GUN ]",
+	Use:   "init [ --ca PATH_TO_CA ][ GUN ]",
 	Short: "Initializes a local trusted collection.",
 	Long:  "Initializes a local trusted collection identified by the Globally Unique Name. This is an online operation.",
 }
@@ -89,6 +89,7 @@ type tufCommander struct {
 	roles  []string
 	sha256 string
 	sha512 string
+	rootCA string
 
 	input  string
 	output string
@@ -96,7 +97,10 @@ type tufCommander struct {
 }
 
 func (t *tufCommander) AddToCommand(cmd *cobra.Command) {
-	cmd.AddCommand(cmdTUFInitTemplate.ToCommand(t.tufInit))
+	cmdTUFInit := cmdTUFInitTemplate.ToCommand(t.tufInit)
+	cmdTUFInit.Flags().StringVar(&t.rootCA, "ca", nil, "path to a CA that should issue the root certificate")
+	cmd.AddCommand(cmdTUFInit)
+
 	cmd.AddCommand(cmdTUFStatusTemplate.ToCommand(t.tufStatus))
 	cmd.AddCommand(cmdTUFPublishTemplate.ToCommand(t.tufPublish))
 	cmd.AddCommand(cmdTUFLookupTemplate.ToCommand(t.tufLookup))
@@ -285,7 +289,7 @@ func (t *tufCommander) tufInit(cmd *cobra.Command, args []string) error {
 		cmd.Printf("Root key found, using: %s\n", rootKeyID)
 	}
 
-	if err = nRepo.Initialize(rootKeyID); err != nil {
+	if err = nRepo.Initialize(rootKeyID, t.rootCA); err != nil {
 		return err
 	}
 	return nil
