@@ -13,7 +13,7 @@ import (
 
 // GenerateCertificate generates an X509 Certificate from a template, given a GUN and validity interval.
 func GenerateCertificate(rootKey data.PrivateKey, gun string, startTime, endTime time.Time) (*x509.Certificate, error) {
-	return GenerateSignedCertificate(signer, gun, startTime, endTime, nil)
+	return GenerateSignedCertificate(rootKey, gun, startTime, endTime, nil)
 }
 
 // GenerateCertificate generates an X509 Certificate from a template, given a GUN and validity interval.
