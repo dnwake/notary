@@ -35,11 +35,16 @@ func generateCertificate(signer crypto.Signer, gun string, startTime, endTime ti
 	}
 
 	var parent = template
+	var publicKey = signer.Public()
+	var privateKeySigner = signer
+
         if ca != nil {
 	   parent = ca
+	   privateKeySigner = nil // private key of CA
         }
 
-	derBytes, err := x509.CreateCertificate(rand.Reader, template, parent, signer.Public(), signer)
+        // signer needs to be the private key of the PARENT.
+	derBytes, err := x509.CreateCertificate(rand.Reader, template, parent, publicKey, privateKeySigner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create the certificate for: %s (%v)", gun, err)
 	}
