@@ -156,7 +156,7 @@ func rootCertKey(gun string, privKey data.PrivateKey, rootCAPath string) (data.P
 	startTime := time.Now()
 
 	// Load the user-specified root CA, if any
-	var rootCA = (*x509.Certificate)(nil)
+	var rootCA := (*x509.Certificate)(nil)
 	if rootCAPath != "" {
 	   rootCA, err := trustmanager.LoadCertFromFile(rootCAPath)
 	   if err != nil {
