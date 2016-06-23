@@ -158,7 +158,7 @@ func rootCertKey(gun string, privKey data.PrivateKey, rootCAPath string) (data.P
 	// Load the user-specified root CA, if any
 	var rootCA = (*x509.Certificate)(nil)
 	if rootCAPath != "" {
-	   rootCA, err = trustmanager.LoadCertFromFile(rootCAPath)
+	   rootCA, err := trustmanager.LoadCertFromFile(rootCAPath)
 	   if err != nil {
 		return nil, fmt.Errorf("failed to load user-specified root CA at: %s (%v)", rootCAPath, err)
 	   }
@@ -929,7 +929,7 @@ func (r *NotaryRepository) RotateKey(role string, serverManagesKey bool) error {
 		}
 
 		// Should RotateKey support specification of a root CA?
-		pubKey, err = rootCertKey(r.gun, privKey, nil)
+		pubKey, err = rootCertKey(r.gun, privKey, "")
 		if err != nil {
 			return err
 		}
