@@ -51,7 +51,7 @@ var cmdTUFRemoveTemplate = usageTemplate{
 }
 
 var cmdTUFInitTemplate = usageTemplate{
-	Use:   "init [ --ca PATH_TO_CA ][ GUN ]",
+	Use:   "init [ --rootca PATH_TO_ROOT_CA ][ GUN ]",
 	Short: "Initializes a local trusted collection.",
 	Long:  "Initializes a local trusted collection identified by the Globally Unique Name. This is an online operation.",
 }
@@ -98,7 +98,7 @@ type tufCommander struct {
 
 func (t *tufCommander) AddToCommand(cmd *cobra.Command) {
 	cmdTUFInit := cmdTUFInitTemplate.ToCommand(t.tufInit)
-	cmdTUFInit.Flags().StringVar(&t.rootCA, "ca", nil, "path to a CA that should issue the root certificate")
+	cmdTUFInit.Flags().StringVar(&t.rootCA, "rootca", "", "path to a CA that should issue the root certificate")
 	cmd.AddCommand(cmdTUFInit)
 
 	cmd.AddCommand(cmdTUFStatusTemplate.ToCommand(t.tufStatus))
