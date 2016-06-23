@@ -162,8 +162,7 @@ func rootCertKey(gun string, privKey data.PrivateKey, rootCAPath string) (data.P
 	   if err != nil {
 		return nil, fmt.Errorf("failed to load user-specified root CA at: %s (%v)", rootCAPath, err)
 	   }
-	}
-	else {
+	} else {
 	     rootCA = (*x509.Certificate)(nil)
 	}
 	cert, err := cryptoservice.GenerateSignedCertificate(
